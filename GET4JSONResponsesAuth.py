@@ -28,6 +28,7 @@
 import basesinfonierbolt
 import urllib2
 import requests
+from requests.auth import HTTPBasicAuth
 import json
 import ssl
 
