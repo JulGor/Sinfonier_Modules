@@ -27,8 +27,6 @@
 
 import basesinfonierbolt
 import urllib2
-import requests
-from requests.auth import HTTPBasicAuth
 import json
 import ssl
 
@@ -46,13 +44,18 @@ class GET4JSONResponsesAuth (basesinfonierbolt.BaseSinfonierBolt):
     
     def userprocess(self):
         try:
-          if self.user:
-            r = requests.get (self.url, verify=False, auth=HTTPBasicAuth(self.user, self.password) )
-          else:
-            r = requests.get (self.url, verify=False)
-          
-          data = json.loads(r.text)
-          self.addField("json_response", data)
+            ctx = ssl.create_default_context()
+            ctx.check_hostname = False
+            ctx.verify_mode = ssl.CERT_NONE
+            
+            req = urllib2.Request(self.url)
+            
+            if self.user:
+                req.add_header("Authorization", "Basic %s" % ("%s:%s" % (self.user, self.password)).encode("base64").strip() )
+            
+            resp = urllib2.urlopen(req, context=ctx)
+            data = json.loads(resp.read())
+            self.addField("json_response", data)
         
         except Exception, e:
           self.addField("error", "Error processing the request: " + str(e))
